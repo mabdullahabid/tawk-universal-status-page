@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Agent Status</title>
+    <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const propertyId = urlParams.get("propertyId");
+      const widgetId = "default";
+
+      var Tawk_API = Tawk_API || {};
+      Tawk_API.onStatusChange = function (status) {
+        const div = document.createElement("div");
+        div.id = "agent-status";
+        div.textContent = status;
+        document.body.appendChild(div);
+      };
+
+      window.onload = () => {
+        const s = document.createElement("script");
+        s.async = true;
+        s.src = `https://embed.tawk.to/${propertyId}/${widgetId}`;
+        s.charset = "UTF-8";
+        s.setAttribute("crossorigin", "*");
+        document.head.appendChild(s);
+      };
+    </script>
+  </head>
+  <body>
+    <h1>Checking agent status...</h1>
+  </body>
+</html>
