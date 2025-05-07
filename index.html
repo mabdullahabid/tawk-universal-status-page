@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>Container One - Live Support</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"
+        integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac-sha256.min.js"
+        integrity="sha512-HMqYytekgCbPoNWBm9oazvuOJ8sFpw+FWBHRi2QM0f/bV5djDV1sRzWzu5Jq7MAUlm+zDAUCgi/vHBBlUGLroQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -293,7 +300,9 @@ export default async function ({ page }) {
                     return;
                 }
 
-                const dynamicHash = await generateSecureHash({ name, email, phone, userId });
+                // const dynamicHash = await generateSecureHash({ name, email, phone, userId });
+                const dynamicHash = hashInBase64(userId, "af96821caac1f551f21182d47b3746d4cf4f7176")
+                console.log(dynamicHash,'my hash')
 
                 // Create Tawk.to script element
                 const tawkScript = document.createElement("script");
@@ -375,6 +384,11 @@ export default async function ({ page }) {
             // Convert to hex string
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        function hashInBase64(userId, secretKey) {
+            var hash = CryptoJS.HmacSHA256(userId, secretKey);
+
+            return CryptoJS.enc.Hex.stringify(hash);
         }
     </script>
 </body>
