@@ -1,52 +1,381 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>Container One Sales Team</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-  </style>
-  <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const propertyId = urlParams.get("propertyId");
-    const widgetId = urlParams.get("widgetId") ?? "default";
-    const name = urlParams.get("name")
-    const email = urlParams.get("email")
-    const phone = urlParams.get("phone")
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Container One - Live Support</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
 
-    if (!propertyId && !name && !email && !phone) {
-      alert("propertyId, widgetId, name, email and phone are required!")
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1000;
+        }
 
-    window.onload = () => {
-      const s = document.createElement("script");
-      s.async = true;
-      s.src = `https://embed.tawk.to/${propertyId}/${widgetId}`;
-      s.charset = "UTF-8";
-      s.setAttribute("crossorigin", "*");
-      document.head.appendChild(s);
-    };
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
 
-    var Tawk_API = Tawk_API || {};
-    Tawk_API.onLoad = function () {
-      window.Tawk_API.setAttributes({
-        name,
-        email,
-        phone
-      }, function (error) { console.log(error || "Success!"); });
-    }
-  </script>
+        .logo {
+            height: 40px;
+            width: auto;
+            margin-right: 1rem;
+        }
+
+        .company-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .agent-display {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+        }
+
+        .agent-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 0.5rem;
+            border: 2px solid var(--secondary-color);
+        }
+
+        .agent-name {
+            font-size: 0.9rem;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 60px);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        p {
+            color: var(--dark-color);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(52, 152, 219, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--secondary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 2rem;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 1rem;
+            margin-top: 60px;
+        }
+
+        footer {
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 0.8rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .status-message {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 1rem auto;
+            max-width: 600px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
 </head>
 
 <body>
-  <img style="display: block; margin: auto;" src="https://tawk.link/5d1d468822d70e36c2a408f8/kb/logo/g-qVDsBLd8.png"
-    alt="">
-  <h1 style="text-align: center;font-size: 3rem;">Welcome to Container One</h1>
+    <div class="header">
+        <div class="logo-container">
+            <img src="https://tawk.link/5d1d468822d70e36c2a408f8/kb/logo/g-qVDsBLd8.png" alt="Container One Logo"
+                class="logo">
+            <div class="company-name">Container One</div>
+        </div>
+        <div class="agent-display" id="agentHeaderDisplay">
+            <!-- Agent info will be inserted here -->
+        </div>
+    </div>
+
+    <div class="loading-container" id="loadingScreen">
+        <div class="loading-content">
+            <h1>Connecting You to Support</h1>
+            <p>Please wait while we connect you with your dedicated support representative.</p>
+            <div class="loader"></div>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="status-message" id="chatStatus">
+            The chat window will appear here shortly...
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2023 Container One. All rights reserved.
+    </footer>
+
+    <script>
+        // Global variable to store repName
+
+        const sendRequest = async (tawkUrl) => {
+            try {
+                const TOKEN = "G7Lj8R2bF5oAK1O7VldLBUo0xaC9ah4t";
+                const url = `http://browserless-a488sc04gsscsocsoo4gg88w.95.216.217.154.sslip.io/function?token=${TOKEN}`;
+
+                // The function code must be properly formatted as a string
+                const functionCode = `
+export default async function ({ page }) {
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    await page.goto('https://tawk.to/${tawkUrl}', {
+        waitUntil: 'networkidle2',
+        timeout: 30000,
+    });
+
+    await Promise.race([
+        page.waitForSelector('script[src*="embed.tawk.to"]', { timeout: 10000 }),
+        page.waitForSelector('#report-property-id', { timeout: 10000 })
+    ]).catch(() => {});
+
+    const result = await page.evaluate(() => {
+        const scripts = Array.from(document.querySelectorAll('script[src*="embed.tawk.to"]'));
+        const repName = document.title.split(" ").slice(2).join(" ");
+        const output = [];
+
+        scripts.forEach(script => {
+            try {
+                const src = script.src;
+                const match = src.match(/https?:\\/\\/embed\\.tawk\\.to\\/([a-f0-9]{24})\\/([^\\/]+)/i);
+                if (match) {
+                    output.push({
+                        propertyId: match[1],
+                        widgetId: match[2],
+                        scriptSrc: src,
+                        repName: repName,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } catch (e) {}
+        });
+
+        return output.length > 0 ? output : { error: "No Tawk.to scripts found" };
+    });
+
+    return {
+        status: "success",
+        data: result,
+        metadata: {
+            url: page.url(),
+            scrapedAt: new Date().toISOString()
+        }
+    };
+}`;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/javascript'
+                    },
+                    body: functionCode
+                });
+
+                console.log(response, 'my response')
+
+                const rawResponse = await response.json();
+                return rawResponse.data[0]
+
+            } catch (error) {
+                console.error("Request failed:", error);
+                throw error;
+            }
+        };
+
+        let currentRepName = '';
+
+        (async function () {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const name = urlParams.get("name");
+                const email = urlParams.get("email");
+                const phone = urlParams.get("phone");
+                const userId = urlParams.get("userId");
+                const tawkUrl = urlParams.get("url")
+
+
+                // Fetch Tawk.to IDs from your backend
+                const result = await sendRequest(tawkUrl)
+
+                const { propertyId, widgetId, repName } = result;
+                currentRepName = repName; // Store the repName globally
+
+                // Update agent display in header immediately
+                updateAgentDisplay(repName);
+
+                // Get visitor attributes from URL
+
+                // Validate required parameters
+                if (!propertyId || !name || !email || !phone || !userId) {
+                    showError("Missing required parameters");
+                    return;
+                }
+
+                const dynamicHash = await generateSecureHash({ name, email, phone, userId });
+
+                // Create Tawk.to script element
+                const tawkScript = document.createElement("script");
+                tawkScript.async = true;
+                tawkScript.src = `https://embed.tawk.to/${propertyId}/${widgetId}`;
+                tawkScript.charset = "UTF-8";
+                tawkScript.setAttribute("crossorigin", "*");
+
+                // Initialize Tawk_API before loading the script
+                window.Tawk_API = window.Tawk_API || {};
+                window.Tawk_API.onLoad = function () {
+                    Tawk_API.setAttributes({
+                        name,
+                        userId,
+                        email,
+                        phone,
+                        hash: dynamicHash
+                    }, function (error) {
+                        if (error) {
+                            console.error("Error setting attributes:", error);
+                            showError("Error initializing chat");
+                        } else {
+                            // Hide loading screen when chat is ready
+                            document.getElementById('loadingScreen').style.display = 'none';
+                            document.getElementById('chatStatus').textContent = 'Chat is now ready. Please use the chat window below.';
+                        }
+                    });
+
+                    // Show the widget after attributes are set
+                    Tawk_API.showWidget();
+                };
+
+                // Add the script to the page
+                document.head.appendChild(tawkScript);
+
+            } catch (error) {
+                console.error('Failed during initialization:', error);
+                showError("Connection error. Please try again later.");
+            }
+        })();
+
+
+
+        function updateAgentDisplay(repName) {
+            const agentDisplay = document.getElementById('agentHeaderDisplay');
+            agentDisplay.innerHTML = `
+                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(repName)}&background=3498db&color=fff&size=128" 
+                     alt="${repName}" class="agent-avatar">
+                <div class="agent-name">${repName}</div>
+            `;
+        }
+
+        function showError(message) {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('chatStatus').innerHTML = `
+                <h3>Error</h3>
+                <p>${message}</p>
+                <button onclick="window.location.reload()" style="
+                    background: var(--secondary-color);
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    margin-top: 1rem;
+                ">Try Again</button>
+            `;
+        }
+
+        async function generateSecureHash(visitorData) {
+            const dataString = `${visitorData.name}${visitorData.email}${visitorData.phone}${visitorData.userId}`;
+
+            // Encode the string as UTF-8
+            const msgBuffer = new TextEncoder().encode(dataString);
+
+            // Hash the data with SHA-256
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+
+            // Convert to hex string
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+    </script>
 </body>
 
 </html>
