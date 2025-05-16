@@ -8,7 +8,12 @@
     <title>Container One - Live Support</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac-sha256.min.js"></script>
+
     <style>
+        iframe {
+            display: none !important;
+        }
+
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -158,6 +163,7 @@
             animation: fadeIn 0.5s ease-out;
         }
     </style>
+</head>
 
 <body>
     <div class="header">
@@ -188,51 +194,7 @@
     <footer>
         &copy; 2023 Container One. All rights reserved.
     </footer>
-    <script>
-        const loginPropertyId = "5d1d468822d70e36c2a408f8";
-        const secretKey = 'af96821caac1f551f21182d47b3746d4cf4f7176';
-        const urlParams = new URLSearchParams(window.location.search);
-        const name = urlParams.get("name");
-        const email = urlParams.get("email");
-        const phone = urlParams.get("phone");
-        const userId = urlParams.get("userId");
-        const tawkUrl = urlParams.get("url")
-
-        function hashInBase64(userId) {
-            var hash = CryptoJS.HmacSHA256(userId, secretKey);
-            return CryptoJS.enc.Hex.stringify(hash);
-        }
-
-        (function () {
-            var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
-            window.Tawk_API = Tawk_API;
-            var s1 = document.createElement("script");
-            var s0 = document.getElementsByTagName("script")[0];
-            s1.async = true;
-            s1.src = `https://embed.tawk.to/${loginPropertyId}/default`;
-            s1.charset = 'UTF-8';
-            s1.setAttribute('crossorigin', '*');
-            s0.parentNode.insertBefore(s1, s0);
-            window.Tawk_API.onBeforeLoad = function () {
-                window.Tawk_API.hideWidget();
-
-            };
-
-
-            window.Tawk_API.onLoad = function () {
-                window.Tawk_API.login({
-                    hash: hashInBase64(userId),
-                    userId: userId,
-                    email: email,
-                    name: name,
-                    // phone: phone
-                }, function (error) {
-                    console.log(error, 'my error')
-                    window.location.replace(`https://memox-inc.github.io/containerone/tawk.html?name=${name}&email=${email}&phone=${phone}&userId=${userId}&url=${tawkUrl}`)
-                })
-            }
-        }())
-    </script>
+    <script src="index.js"></script>
 </body>
 
 </html>
