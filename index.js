@@ -177,6 +177,9 @@ function loadTawkScript(propertyId, widgetId, callback) {
     s1.charset = 'UTF-8';
     s1.setAttribute('crossorigin', '*');
     s0.parentNode.insertBefore(s1, s0);
+    window.Tawk_API.onBeforeLoad = function () {
+        window.Tawk_API.maximize();
+    };
 
     if (callback) {
         window.Tawk_API.onLoad = callback;
