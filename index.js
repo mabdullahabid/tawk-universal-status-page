@@ -106,7 +106,7 @@ let currentRepName = '';
         // Get visitor attributes from URL
 
         // Validate required parameters
-        if (!propertyId || !name || !email || !phone || !userId) {
+        if (!propertyId || !name || !email || !phone || !userId || !sessionId) {
             showError("Missing required parameters");
             return;
         }
