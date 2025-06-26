@@ -239,7 +239,6 @@ function tawkLogin(userData) {
                     propertyId: userData.propertyId,
                     widgetId: userData.widgetId
                 }, function (err) {
-                    console.log(err, 'my error')
                     var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
                     window.Tawk_API = Tawk_API;
 
@@ -324,7 +323,6 @@ async function getOrCreateSession() {
         }
     })
     const sessionData = await result.json()
-    console.log(sessionData, 'session data')
     if (sessionData?.detail === "Not found.") {
         const createSessionData = await fetch(`${baseUrl}sessions/`, {
             method: "POST",
@@ -387,7 +385,6 @@ const createVisitor = async () => {
 
     const getVisitorJson = await getVisitor.json();
 
-    console.log(getVisitorJson, 'get visitor')
     if (getVisitorJson.detail === "Not found." || !getVisitorJson.length) {
         // If visitor does not exist, create a new one
         const visitor = await fetch(`${baseUrl}visitors/`, {
