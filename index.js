@@ -4,6 +4,8 @@ const secretKey = 'af96821caac1f551f21182d47b3746d4cf4f7176';
 const baseUrl = "http://localhost:8000/api/v1/"
 let token = null
 let roomId = null
+let visitorId = null
+let authUserId = null
 const urlParams = new URLSearchParams(window.location.search);
 const name = urlParams.get("name");
 const email = urlParams.get("email");
@@ -112,7 +114,7 @@ let currentRepName = '';
         }
 
         await new Promise((resolve) => {
-            loadTawkScript(propertyId, widgetId, function () {
+            loadTawkScript(propertyId, widgetId, async function () {
                 window.Tawk_API.setAttributes({
                     hash: hashInBase64(userId),
                     userId: userId,
@@ -120,19 +122,11 @@ let currentRepName = '';
                     email: email,
                     phone: phone
                 })
+                await loginTawkUser()
+                await createVisitor()
                 resolve();
             });
         });
-
-        // await tawkLogin({
-        //     userId,
-        //     name,
-        //     email,
-        //     phone,
-        //     propertyId,
-        //     widgetId
-        // });
-
 
     } catch (error) {
         console.error('Failed during initialization:', error);
@@ -188,14 +182,11 @@ function loadTawkScript(propertyId, widgetId, callback) {
     window.Tawk_API.onChatMessageVisitor = function (obj) {
 
         (async function () {
-            if (!token) {
-                await loginTawkUser()
-            }
             if (!roomId) {
                 await getOrCreateSession()
             }
 
-            await createMessageBySession('prospect', obj?.message, roomId, 29)
+            await createMessageBySession('prospect', obj?.message, roomId, visitorId, authUserId)
 
 
         }())
@@ -205,14 +196,11 @@ function loadTawkScript(propertyId, widgetId, callback) {
     window.Tawk_API.onChatMessageAgent = function (obj) {
 
         (async function () {
-            if (!token) {
-                await loginTawkUser()
-            }
             if (!roomId) {
                 await getOrCreateSession()
             }
 
-            await createMessageBySession('sales_rep', obj?.message, roomId, 29)
+            await createMessageBySession('sales_rep', obj?.message, roomId, authUserId, visitorId)
 
 
         }())
@@ -321,6 +309,7 @@ async function loginTawkUser() {
     })
     const reponseToJson = await response.json()
     token = reponseToJson.key
+    authUserId = reponseToJson.user_id
     return reponseToJson.key
 }
 
@@ -348,7 +337,7 @@ async function getOrCreateSession() {
                 room_name: sessionId,
                 is_active: true,
                 is_handover: true,
-                status: 'open',
+                visitor: visitorId,
                 organization: 33,
                 bot: 29
 
@@ -365,7 +354,7 @@ async function getOrCreateSession() {
 }
 
 
-const createMessageBySession = async (sender_type, content, room = roomId, bot) => {
+const createMessageBySession = async (sender_type, content, room = roomId, sender, receiver) => {
     await fetch(`${baseUrl}messages/`, {
         method: "POST",
         headers: {
@@ -374,13 +363,49 @@ const createMessageBySession = async (sender_type, content, room = roomId, bot) 
 
         },
         body: JSON.stringify({
+            room,
+            sender,
+            receiver,
             "sender_type": sender_type,
             message_type: "text",
             is_read: false,
-            content,
-            room,
-            bot
+            content
         })
     })
+
+}
+
+const createVisitor = async () => {
+
+    const getVisitor = await fetch(`${baseUrl}visitors/?email=${email}`, {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token} `,
+        }
+    })
+
+    const getVisitorJson = await getVisitor.json();
+
+    console.log(getVisitorJson, 'get visitor')
+    if (getVisitorJson.detail === "Not found." || !getVisitorJson.length) {
+        // If visitor does not exist, create a new one
+        const visitor = await fetch(`${baseUrl}visitors/`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token} `,
+
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                phone_number: phone,
+            })
+        })
+        const visitorData = await visitor.json();
+        visitorId = visitorData.id;
+    }
+    else visitorId = getVisitorJson[0].id;
 
 }
