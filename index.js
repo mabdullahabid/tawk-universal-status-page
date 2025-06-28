@@ -1,6 +1,19 @@
 // Global variable to store repName
 const loginPropertyId = "5d1d468822d70e36c2a408f8";
 const secretKey = 'af96821caac1f551f21182d47b3746d4cf4f7176';
+const baseUrl = "http://localhost:8000/api/v1/"
+let token = null
+let roomId = null
+let visitorId = null
+let authUserId = null
+const urlParams = new URLSearchParams(window.location.search);
+const name = urlParams.get("name");
+const email = urlParams.get("email");
+const phone = urlParams.get("phone");
+const userId = urlParams.get("userId");
+const tawkUrl = urlParams.get("url")
+const sessionId = urlParams.get("sessionId")
+
 
 function hashInBase64(userId) {
     var hash = CryptoJS.HmacSHA256(userId, secretKey);
@@ -82,13 +95,6 @@ let currentRepName = '';
 
 (async function () {
     try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const name = urlParams.get("name");
-        const email = urlParams.get("email");
-        const phone = urlParams.get("phone");
-        const userId = urlParams.get("userId");
-        const tawkUrl = urlParams.get("url")
-
 
         // Fetch Tawk.to IDs from your backend
         const result = await sendRequest(tawkUrl)
@@ -102,13 +108,13 @@ let currentRepName = '';
         // Get visitor attributes from URL
 
         // Validate required parameters
-        if (!propertyId || !name || !email || !phone || !userId) {
+        if (!propertyId || !name || !email || !phone || !userId || !sessionId) {
             showError("Missing required parameters");
             return;
         }
 
         await new Promise((resolve) => {
-            loadTawkScript(propertyId, widgetId, function () {
+            loadTawkScript(propertyId, widgetId, async function () {
                 window.Tawk_API.setAttributes({
                     hash: hashInBase64(userId),
                     userId: userId,
@@ -116,19 +122,11 @@ let currentRepName = '';
                     email: email,
                     phone: phone
                 })
+                await loginTawkUser()
+                await createVisitor()
                 resolve();
             });
         });
-
-        // await tawkLogin({
-        //     userId,
-        //     name,
-        //     email,
-        //     phone,
-        //     propertyId,
-        //     widgetId
-        // });
-
 
     } catch (error) {
         console.error('Failed during initialization:', error);
@@ -181,6 +179,35 @@ function loadTawkScript(propertyId, widgetId, callback) {
         window.Tawk_API.maximize();
     };
 
+    window.Tawk_API.onChatMessageVisitor = function (obj) {
+
+        (async function () {
+            if (!roomId) {
+                await getOrCreateSession()
+            }
+
+            await createMessageBySession('prospect', obj?.message, roomId, visitorId, authUserId)
+
+
+        }())
+
+    }
+
+    window.Tawk_API.onChatMessageAgent = function (obj) {
+
+        (async function () {
+            if (!roomId) {
+                await getOrCreateSession()
+            }
+
+            await createMessageBySession('sales_rep', obj?.message, roomId, authUserId, visitorId)
+
+
+        }())
+
+    }
+
+
     if (callback) {
         window.Tawk_API.onLoad = callback;
     }
@@ -194,7 +221,6 @@ function loadTawkScript(propertyId, widgetId, callback) {
 
 function tawkLogin(userData) {
     return new Promise((resolve, reject) => {
-        console.log('in login')
         window.Tawk_API.login({
             hash: hashInBase64(userData.userId),
             userId: userData.userId,
@@ -213,7 +239,6 @@ function tawkLogin(userData) {
                     propertyId: userData.propertyId,
                     widgetId: userData.widgetId
                 }, function (err) {
-                    console.log(err, 'my error')
                     var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
                     window.Tawk_API = Tawk_API;
 
@@ -266,4 +291,118 @@ function tawkSetAttributes(userData) {
         });
 
     });
+}
+
+
+async function loginTawkUser() {
+    const data = {
+        email: "tawkuser@autonomoustech.ca",
+        password: "Memox@123"
+    }
+    const response = await fetch(`${baseUrl}auth/login/`, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    })
+    const reponseToJson = await response.json()
+    token = reponseToJson.key
+    authUserId = reponseToJson.user_id
+    return reponseToJson.key
+}
+
+
+async function getOrCreateSession() {
+    const result = await fetch(`${baseUrl}sessions/${sessionId}/`, {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token}`,
+
+        }
+    })
+    const sessionData = await result.json()
+    if (sessionData?.detail === "Not found.") {
+        const createSessionData = await fetch(`${baseUrl}sessions/`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`,
+
+            },
+            body: JSON.stringify({
+                room_name: sessionId,
+                is_active: true,
+                is_handover: true,
+                visitor: visitorId,
+                organization: 33,
+                bot: 29
+
+            })
+        })
+
+        const createSessionDataJson = await createSessionData.json()
+        roomId = createSessionDataJson.id
+
+    }
+    else roomId = sessionData?.id
+
+
+}
+
+
+const createMessageBySession = async (sender_type, content, room = roomId, sender, receiver) => {
+    await fetch(`${baseUrl}messages/`, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token} `,
+
+        },
+        body: JSON.stringify({
+            room,
+            sender,
+            receiver,
+            "sender_type": sender_type,
+            message_type: "text",
+            is_read: false,
+            content
+        })
+    })
+
+}
+
+const createVisitor = async () => {
+
+    const getVisitor = await fetch(`${baseUrl}visitors/?email=${email}`, {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Token ${token} `,
+        }
+    })
+
+    const getVisitorJson = await getVisitor.json();
+
+    if (getVisitorJson.detail === "Not found." || !getVisitorJson.length) {
+        // If visitor does not exist, create a new one
+        const visitor = await fetch(`${baseUrl}visitors/`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token} `,
+
+            },
+            body: JSON.stringify({
+                name,
+                email,
+                phone_number: phone,
+            })
+        })
+        const visitorData = await visitor.json();
+        visitorId = visitorData.id;
+    }
+    else visitorId = getVisitorJson[0].id;
+
 }
