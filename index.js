@@ -2,6 +2,7 @@
 const loginPropertyId = "5d1d468822d70e36c2a408f8";
 const secretKey = 'af96821caac1f551f21182d47b3746d4cf4f7176';
 const baseUrl = "https://hub.memox.io/api/v1/"
+// const baseUrl = "http://localhost:8000/api/v1/"
 let token = null
 let roomId = null
 let visitorId = null
@@ -336,8 +337,8 @@ async function getOrCreateSession() {
                 is_active: true,
                 is_handover: true,
                 visitor: visitorId,
-                organization: 33,
-                bot: 29
+                organization: 14,
+                bot: 12
 
             })
         })
