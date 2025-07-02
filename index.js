@@ -1,7 +1,7 @@
 // Global variable to store repName
 const loginPropertyId = "5d1d468822d70e36c2a408f8";
 const secretKey = 'af96821caac1f551f21182d47b3746d4cf4f7176';
-const baseUrl = "http://localhost:8000/api/v1/"
+const baseUrl = "https://hub.memox.io/api/v1/"
 let token = null
 let roomId = null
 let visitorId = null
